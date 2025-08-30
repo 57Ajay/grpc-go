@@ -17,6 +17,15 @@ message CreateUserRequest {
 
 message CreateUserResponse { string id = 1; }
 
+message ListUsersRequest {}
+
+message CreateUsersResponse {
+  string result = 1;
+  int32 created_user_count = 2;
+}
+
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc ListUsers(ListUsersRequest) returns (stream User);
+  rpc CreateUsers(stream CreateUserRequest) returns (CreateUserResponse);
 }

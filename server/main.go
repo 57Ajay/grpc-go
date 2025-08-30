@@ -36,6 +36,42 @@ func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 
 }
 
+func (s *server) ListUsers(req *pb.ListUsersRequest, stream pb.UserService_ListUsersServer) error {
+	log.Println("Received ListUsers request")
+	sqlQuery := `SELECT id, name, email FROM users`
+
+	rows, err := s.db.Query(context.Background(), sqlQuery)
+
+	if err != nil {
+		log.Printf("Failed to query users: %v", err)
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user pb.User
+
+		if err := rows.Scan(&user.Id, &user.Name, &user.Email); err != nil {
+			log.Printf("Failed to scan user row: %v", err)
+			return err
+		}
+
+		if err := stream.Send(&user); err != nil {
+			log.Printf("Failed to send user to stream: %v", err)
+			return err
+		}
+
+	}
+	if err := rows.Err(); err != nil {
+		log.Printf("Error iterating user rows: %v", err)
+		return err
+	}
+
+	log.Println("Finished streaming users")
+	return nil
+
+}
+
 func main() {
 	fmt.Println("Welcome to grpcServer side.")
 
