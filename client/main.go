@@ -111,19 +111,18 @@ func userChat(ctx context.Context, grpcClient pb.UserServiceClient) {
 	go func() {
 		for {
 
-			var msg *pb.UserChatMessage
-
-			if err := chatUser.RecvMsg(msg); err == io.EOF {
+			res, err := chatUser.Recv()
+			if err == io.EOF {
 				log.Println("Server closed the stream.")
 				close(waitc)
 				return
-			} else if err != nil {
+			}
+			if err != nil {
 				log.Printf("Error receiving message: %v", err)
 				close(waitc)
 				return
 			}
-
-			log.Printf("Received from Server: [%s] %s", msg.GetUserId(), msg.GetMessage())
+			log.Printf("Received from Server: [%s] %s", res.GetUserId(), res.GetMessage())
 		}
 	}()
 

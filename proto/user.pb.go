@@ -337,13 +337,13 @@ const file_proto_user_proto_rawDesc = "" +
 	"\x12created_user_count\x18\x02 \x01(\x05R\x10createdUserCount\"D\n" +
 	"\x0fUserChatMessage\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2\x8a\x02\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\x8c\x02\n" +
 	"\vUserService\x12A\n" +
 	"\n" +
 	"CreateUser\x12\x18.proto.CreateUserRequest\x1a\x19.proto.CreateUserResponse\x123\n" +
 	"\tListUsers\x12\x17.proto.ListUsersRequest\x1a\v.proto.User0\x01\x12E\n" +
-	"\vCreateUsers\x12\x18.proto.CreateUserRequest\x1a\x1a.proto.CreateUsersResponse(\x01\x12<\n" +
-	"\bUserChat\x12\x16.proto.UserChatMessage\x1a\x16.proto.UserChatMessage(\x01B Z\x1egithub.com/57ajay/grpcgo/protob\x06proto3"
+	"\vCreateUsers\x12\x18.proto.CreateUserRequest\x1a\x1a.proto.CreateUsersResponse(\x01\x12>\n" +
+	"\bUserChat\x12\x16.proto.UserChatMessage\x1a\x16.proto.UserChatMessage(\x010\x01B Z\x1egithub.com/57ajay/grpcgo/protob\x06proto3"
 
 var (
 	file_proto_user_proto_rawDescOnce sync.Once

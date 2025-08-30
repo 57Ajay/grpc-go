@@ -129,7 +129,7 @@ func (s *server) UserChat(stream pb.UserService_UserChatServer) error {
 			UserId:  "Server",
 			Message: "Acknowledged your message: '" + req.GetMessage() + "'",
 		}
-		if err := stream.SendMsg(replyMsg); err != nil {
+		if err := stream.Send(replyMsg); err != nil {
 			log.Printf("Error sending reply to chat stream: %v", err)
 			return err
 		}

@@ -32,7 +32,7 @@ type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[User], error)
 	CreateUsers(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[CreateUserRequest, CreateUsersResponse], error)
-	UserChat(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UserChatMessage, UserChatMessage], error)
+	UserChat(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[UserChatMessage, UserChatMessage], error)
 }
 
 type userServiceClient struct {
@@ -85,7 +85,7 @@ func (c *userServiceClient) CreateUsers(ctx context.Context, opts ...grpc.CallOp
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type UserService_CreateUsersClient = grpc.ClientStreamingClient[CreateUserRequest, CreateUsersResponse]
 
-func (c *userServiceClient) UserChat(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[UserChatMessage, UserChatMessage], error) {
+func (c *userServiceClient) UserChat(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[UserChatMessage, UserChatMessage], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &UserService_ServiceDesc.Streams[2], UserService_UserChat_FullMethodName, cOpts...)
 	if err != nil {
@@ -96,7 +96,7 @@ func (c *userServiceClient) UserChat(ctx context.Context, opts ...grpc.CallOptio
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type UserService_UserChatClient = grpc.ClientStreamingClient[UserChatMessage, UserChatMessage]
+type UserService_UserChatClient = grpc.BidiStreamingClient[UserChatMessage, UserChatMessage]
 
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
@@ -105,7 +105,7 @@ type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	ListUsers(*ListUsersRequest, grpc.ServerStreamingServer[User]) error
 	CreateUsers(grpc.ClientStreamingServer[CreateUserRequest, CreateUsersResponse]) error
-	UserChat(grpc.ClientStreamingServer[UserChatMessage, UserChatMessage]) error
+	UserChat(grpc.BidiStreamingServer[UserChatMessage, UserChatMessage]) error
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -125,7 +125,7 @@ func (UnimplementedUserServiceServer) ListUsers(*ListUsersRequest, grpc.ServerSt
 func (UnimplementedUserServiceServer) CreateUsers(grpc.ClientStreamingServer[CreateUserRequest, CreateUsersResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method CreateUsers not implemented")
 }
-func (UnimplementedUserServiceServer) UserChat(grpc.ClientStreamingServer[UserChatMessage, UserChatMessage]) error {
+func (UnimplementedUserServiceServer) UserChat(grpc.BidiStreamingServer[UserChatMessage, UserChatMessage]) error {
 	return status.Errorf(codes.Unimplemented, "method UserChat not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
@@ -190,7 +190,7 @@ func _UserService_UserChat_Handler(srv interface{}, stream grpc.ServerStream) er
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type UserService_UserChatServer = grpc.ClientStreamingServer[UserChatMessage, UserChatMessage]
+type UserService_UserChatServer = grpc.BidiStreamingServer[UserChatMessage, UserChatMessage]
 
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -218,6 +218,7 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "UserChat",
 			Handler:       _UserService_UserChat_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},
