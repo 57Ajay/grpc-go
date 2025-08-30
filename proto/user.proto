@@ -27,5 +27,5 @@ message CreateUsersResponse {
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc ListUsers(ListUsersRequest) returns (stream User);
-  rpc CreateUsers(stream CreateUserRequest) returns (CreateUserResponse);
+  rpc CreateUsers(stream CreateUserRequest) returns (CreateUsersResponse);
 }

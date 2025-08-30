@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 
@@ -70,6 +71,41 @@ func (s *server) ListUsers(req *pb.ListUsersRequest, stream pb.UserService_ListU
 	log.Println("Finished streaming users")
 	return nil
 
+}
+
+func (s *server) CreateUsers(stream pb.UserService_CreateUsersServer) error {
+	log.Println("Received CreateUsers stream request")
+	var createdUserCount int32 = 0
+
+	for {
+		req, err := stream.Recv()
+
+		if err == io.EOF {
+			log.Printf("Finished client stream. Total users created: %d", createdUserCount)
+			return stream.SendAndClose(&pb.CreateUsersResponse{
+				Result:           "Users created Successfully.",
+				CreatedUserCount: createdUserCount,
+			})
+		}
+
+		if err != nil {
+			log.Printf("Error receiving the stream.\n err: %v", err)
+			return err
+		}
+
+		log.Printf("Processing CreateUser request for name: %s", req.GetName())
+		sqlQuery := `INSERT INTO users (name, email) VALUES ($1, $2)`
+
+		_, err = s.db.Exec(context.Background(), sqlQuery, req.GetName(), req.GetEmail())
+
+		if err != nil {
+			log.Printf("Failed to insert user %s: %v", req.GetName(), err)
+			continue
+		}
+
+		createdUserCount++
+
+	}
 }
 
 func main() {

@@ -282,12 +282,12 @@ const file_proto_user_proto_rawDesc = "" +
 	"\x10ListUsersRequest\"[\n" +
 	"\x13CreateUsersResponse\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\tR\x06result\x12,\n" +
-	"\x12created_user_count\x18\x02 \x01(\x05R\x10createdUserCount2\xcb\x01\n" +
+	"\x12created_user_count\x18\x02 \x01(\x05R\x10createdUserCount2\xcc\x01\n" +
 	"\vUserService\x12A\n" +
 	"\n" +
 	"CreateUser\x12\x18.proto.CreateUserRequest\x1a\x19.proto.CreateUserResponse\x123\n" +
-	"\tListUsers\x12\x17.proto.ListUsersRequest\x1a\v.proto.User0\x01\x12D\n" +
-	"\vCreateUsers\x12\x18.proto.CreateUserRequest\x1a\x19.proto.CreateUserResponse(\x01B Z\x1egithub.com/57ajay/grpcgo/protob\x06proto3"
+	"\tListUsers\x12\x17.proto.ListUsersRequest\x1a\v.proto.User0\x01\x12E\n" +
+	"\vCreateUsers\x12\x18.proto.CreateUserRequest\x1a\x1a.proto.CreateUsersResponse(\x01B Z\x1egithub.com/57ajay/grpcgo/protob\x06proto3"
 
 var (
 	file_proto_user_proto_rawDescOnce sync.Once
@@ -315,7 +315,7 @@ var file_proto_user_proto_depIdxs = []int32{
 	1, // 2: proto.UserService.CreateUsers:input_type -> proto.CreateUserRequest
 	2, // 3: proto.UserService.CreateUser:output_type -> proto.CreateUserResponse
 	0, // 4: proto.UserService.ListUsers:output_type -> proto.User
-	2, // 5: proto.UserService.CreateUsers:output_type -> proto.CreateUserResponse
+	4, // 5: proto.UserService.CreateUsers:output_type -> proto.CreateUsersResponse
 	3, // [3:6] is the sub-list for method output_type
 	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
