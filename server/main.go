@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	pb "github.com/57ajay/grpcgo/proto"
@@ -14,6 +15,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -163,6 +166,45 @@ func (s *server) UserChat(stream pb.UserService_UserChatServer) error {
 
 }
 
+func authenticate(ctx context.Context) error {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return status.Error(codes.Unauthenticated, "metadata is not provided")
+	}
+
+	values := md["authorization"]
+	if len(values) == 0 {
+		return status.Error(codes.Unauthenticated, "authorization token is not provided")
+	}
+
+	secretToken := os.Getenv("SECRET_KEY")
+	if len(secretToken) == 0 {
+		return status.Error(codes.Internal, "server is not configured correctly")
+	}
+
+	if values[0] != "Bearer "+secretToken {
+		return status.Error(codes.Unauthenticated, "authorization token is invalid")
+	}
+
+	return nil
+}
+
+// Unary Interceptor
+func authInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	if err := authenticate(ctx); err != nil {
+		return nil, err
+	}
+	return handler(ctx, req)
+}
+
+// Stream Interceptor
+func authStreamInterceptor(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	if err := authenticate(ss.Context()); err != nil {
+		return err
+	}
+	return handler(srv, ss)
+}
+
 func main() {
 	fmt.Println("Welcome to grpcServer side.")
 
@@ -181,8 +223,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	creds, err := credentials.NewServerTLSFromFile("server.crt", "server.key")
+	if err != nil {
+		log.Fatalf("failed to load TLS certificates: %v", err)
+	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.Creds(creds), grpc.UnaryInterceptor(authInterceptor), grpc.StreamInterceptor(authStreamInterceptor))
 	pb.RegisterUserServiceServer(grpcServer, &server{db: dbPool})
 	log.Println("gRPC server started on port :50051")
 

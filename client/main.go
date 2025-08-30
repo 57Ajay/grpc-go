@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"time"
+
+	"google.golang.org/grpc/metadata"
 
 	pb "github.com/57ajay/grpcgo/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
@@ -147,7 +150,18 @@ func userChat(ctx context.Context, grpcClient pb.UserServiceClient) {
 
 func main() {
 	fmt.Println("Welcome to grpcClient side")
-	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	creds, err := credentials.NewClientTLSFromFile("server.crt", "localhost") // The second param is serverNameOverride
+	if err != nil {
+		log.Fatalf("failed to load TLS credentials: %v", err)
+	}
+	secretToken := os.Getenv("SECRET_KEY")
+	if len(secretToken) == 0 {
+		log.Fatal("PLEASE ADD SECRET_KEY")
+	}
+	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(creds))
+
+	md := metadata.Pairs("authorization", "Bearer "+secretToken)
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	if err != nil {
 		log.Fatal("some error: ", err)
@@ -155,7 +169,7 @@ func main() {
 
 	defer conn.Close()
 	grpcClient := pb.NewUserServiceClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 
 	// Unary rpc
