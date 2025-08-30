@@ -1,0 +1,17 @@
+# docker-compose.yml
+services:
+  postgres:
+    image: postgres:18beta3-alpine
+    container_name: grpc-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=ajay
+      - POSTGRES_PASSWORD=57ajay
+      - POSTGRES_DB=grpc-postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
