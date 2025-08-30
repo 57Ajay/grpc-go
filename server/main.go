@@ -2,14 +2,19 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/57ajay/grpcgo/proto"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const dbConnectionString = "postgres://ajay:57ajay@localhost:5432/grpc-postgres"
@@ -27,8 +32,12 @@ func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 	err := s.db.QueryRow(ctx, sqlQuery, req.GetName(), req.GetEmail()).Scan(&newUserId)
 
 	if err != nil {
-		log.Fatal("Failed to insert user in db.\nerr: ", err)
-		return nil, err
+		log.Printf("Failed to insert user in db.\nerr: %v\n", err)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, status.Errorf(codes.AlreadyExists, "a user with email '%s' already exists", req.GetEmail())
+		}
+		return nil, status.Errorf(codes.Internal, "unexpected database error")
 	}
 
 	log.Printf("Successfully inserted user with userId: %s", newUserId)
@@ -40,8 +49,9 @@ func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb
 func (s *server) ListUsers(req *pb.ListUsersRequest, stream pb.UserService_ListUsersServer) error {
 	log.Println("Received ListUsers request")
 	sqlQuery := `SELECT id, name, email FROM users`
+	ctx := stream.Context()
 
-	rows, err := s.db.Query(context.Background(), sqlQuery)
+	rows, err := s.db.Query(ctx, sqlQuery)
 
 	if err != nil {
 		log.Printf("Failed to query users: %v", err)
@@ -50,6 +60,11 @@ func (s *server) ListUsers(req *pb.ListUsersRequest, stream pb.UserService_ListU
 	defer rows.Close()
 
 	for rows.Next() {
+		if ctx.Err() != nil {
+			log.Printf("Client canceled request. Aborting stream.")
+			return ctx.Err()
+		}
+
 		var user pb.User
 
 		if err := rows.Scan(&user.Id, &user.Name, &user.Email); err != nil {
@@ -74,10 +89,17 @@ func (s *server) ListUsers(req *pb.ListUsersRequest, stream pb.UserService_ListU
 }
 
 func (s *server) CreateUsers(stream pb.UserService_CreateUsersServer) error {
+	ctx := stream.Context()
 	log.Println("Received CreateUsers stream request")
 	var createdUserCount int32 = 0
 
 	for {
+
+		if ctx.Err() != nil {
+			log.Printf("Client canceled request. Aborting stream.")
+			return ctx.Err()
+		}
+
 		req, err := stream.Recv()
 
 		if err == io.EOF {
@@ -96,7 +118,7 @@ func (s *server) CreateUsers(stream pb.UserService_CreateUsersServer) error {
 		log.Printf("Processing CreateUser request for name: %s", req.GetName())
 		sqlQuery := `INSERT INTO users (name, email) VALUES ($1, $2)`
 
-		_, err = s.db.Exec(context.Background(), sqlQuery, req.GetName(), req.GetEmail())
+		_, err = s.db.Exec(ctx, sqlQuery, req.GetName(), req.GetEmail())
 
 		if err != nil {
 			log.Printf("Failed to insert user %s: %v", req.GetName(), err)
@@ -109,10 +131,14 @@ func (s *server) CreateUsers(stream pb.UserService_CreateUsersServer) error {
 }
 
 func (s *server) UserChat(stream pb.UserService_UserChatServer) error {
-
+	ctx := stream.Context()
 	log.Println("UserChat session started")
 
 	for {
+		if ctx.Err() != nil {
+			log.Printf("Client canceled request. Aborting stream.")
+			return ctx.Err()
+		}
 		req, err := stream.Recv()
 		if err == io.EOF {
 			log.Println("Client closed the chat stream.")
@@ -140,7 +166,8 @@ func (s *server) UserChat(stream pb.UserService_UserChatServer) error {
 func main() {
 	fmt.Println("Welcome to grpcServer side.")
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
 	dbPool, err := pgxpool.New(ctx, dbConnectionString)
 
 	if err != nil {
