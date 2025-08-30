@@ -108,6 +108,35 @@ func (s *server) CreateUsers(stream pb.UserService_CreateUsersServer) error {
 	}
 }
 
+func (s *server) UserChat(stream pb.UserService_UserChatServer) error {
+
+	log.Println("UserChat session started")
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			log.Println("Client closed the chat stream.")
+			return nil
+		}
+		if err != nil {
+			log.Printf("Error receiving from chat stream: %v", err)
+			return err
+		}
+
+		log.Printf("Received chat message from User ID '%s': %s", req.GetUserId(), req.GetMessage())
+
+		replyMsg := &pb.UserChatMessage{
+			UserId:  "Server",
+			Message: "Acknowledged your message: '" + req.GetMessage() + "'",
+		}
+		if err := stream.SendMsg(replyMsg); err != nil {
+			log.Printf("Error sending reply to chat stream: %v", err)
+			return err
+		}
+	}
+
+}
+
 func main() {
 	fmt.Println("Welcome to grpcServer side.")
 

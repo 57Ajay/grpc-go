@@ -98,6 +98,54 @@ func createUsers(ctx context.Context, grpcClient pb.UserServiceClient) {
 	log.Println("---------------------------------")
 }
 
+func userChat(ctx context.Context, grpcClient pb.UserServiceClient) {
+	log.Println("---------Chatting with server--------")
+
+	chatUser, err := grpcClient.UserChat(ctx)
+	if err != nil {
+		log.Println("Failed to start chat with server.\nErr: ", err)
+	}
+
+	waitc := make(chan struct{})
+
+	go func() {
+		for {
+
+			var msg *pb.UserChatMessage
+
+			if err := chatUser.RecvMsg(msg); err == io.EOF {
+				log.Println("Server closed the stream.")
+				close(waitc)
+				return
+			} else if err != nil {
+				log.Printf("Error receiving message: %v", err)
+				close(waitc)
+				return
+			}
+
+			log.Printf("Received from Server: [%s] %s", msg.GetUserId(), msg.GetMessage())
+		}
+	}()
+
+	messagesToSend := []*pb.UserChatMessage{
+		{UserId: "client-1", Message: "Hello, server!"},
+		{UserId: "client-1", Message: "How are you?"},
+		{UserId: "client-1", Message: "gRPC is awesome."},
+	}
+
+	for _, msg := range messagesToSend {
+		log.Printf("Sending to Server: %s", msg.GetMessage())
+		if err := chatUser.Send(msg); err != nil {
+			log.Fatalf("Failed to send message: %v", err)
+		}
+		time.Sleep(1 * time.Second)
+	}
+	chatUser.CloseSend()
+	<-waitc
+	log.Println("chat finish")
+
+}
+
 func main() {
 	fmt.Println("Welcome to grpcClient side")
 	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -113,11 +161,14 @@ func main() {
 
 	// Unary rpc
 	// createUser(ctx, grpcClient)
-
-	// server streaming rpc
-	listUsers(ctx, grpcClient)
-
-	// client streaming rpc
+	//
+	// // server streaming rpc
+	// listUsers(ctx, grpcClient)
+	//
+	// // client streaming rpc
 	// createUsers(ctx, grpcClient)
+	//
+	// bidirectional streaming rpc
+	userChat(ctx, grpcClient)
 
 }

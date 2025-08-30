@@ -265,6 +265,58 @@ func (x *CreateUsersResponse) GetCreatedUserCount() int32 {
 	return 0
 }
 
+type UserChatMessage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserChatMessage) Reset() {
+	*x = UserChatMessage{}
+	mi := &file_proto_user_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserChatMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserChatMessage) ProtoMessage() {}
+
+func (x *UserChatMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_user_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserChatMessage.ProtoReflect.Descriptor instead.
+func (*UserChatMessage) Descriptor() ([]byte, []int) {
+	return file_proto_user_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *UserChatMessage) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UserChatMessage) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 var File_proto_user_proto protoreflect.FileDescriptor
 
 const file_proto_user_proto_rawDesc = "" +
@@ -282,12 +334,16 @@ const file_proto_user_proto_rawDesc = "" +
 	"\x10ListUsersRequest\"[\n" +
 	"\x13CreateUsersResponse\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\tR\x06result\x12,\n" +
-	"\x12created_user_count\x18\x02 \x01(\x05R\x10createdUserCount2\xcc\x01\n" +
+	"\x12created_user_count\x18\x02 \x01(\x05R\x10createdUserCount\"D\n" +
+	"\x0fUserChatMessage\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\x8a\x02\n" +
 	"\vUserService\x12A\n" +
 	"\n" +
 	"CreateUser\x12\x18.proto.CreateUserRequest\x1a\x19.proto.CreateUserResponse\x123\n" +
 	"\tListUsers\x12\x17.proto.ListUsersRequest\x1a\v.proto.User0\x01\x12E\n" +
-	"\vCreateUsers\x12\x18.proto.CreateUserRequest\x1a\x1a.proto.CreateUsersResponse(\x01B Z\x1egithub.com/57ajay/grpcgo/protob\x06proto3"
+	"\vCreateUsers\x12\x18.proto.CreateUserRequest\x1a\x1a.proto.CreateUsersResponse(\x01\x12<\n" +
+	"\bUserChat\x12\x16.proto.UserChatMessage\x1a\x16.proto.UserChatMessage(\x01B Z\x1egithub.com/57ajay/grpcgo/protob\x06proto3"
 
 var (
 	file_proto_user_proto_rawDescOnce sync.Once
@@ -301,23 +357,26 @@ func file_proto_user_proto_rawDescGZIP() []byte {
 	return file_proto_user_proto_rawDescData
 }
 
-var file_proto_user_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_proto_user_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_proto_user_proto_goTypes = []any{
 	(*User)(nil),                // 0: proto.User
 	(*CreateUserRequest)(nil),   // 1: proto.CreateUserRequest
 	(*CreateUserResponse)(nil),  // 2: proto.CreateUserResponse
 	(*ListUsersRequest)(nil),    // 3: proto.ListUsersRequest
 	(*CreateUsersResponse)(nil), // 4: proto.CreateUsersResponse
+	(*UserChatMessage)(nil),     // 5: proto.UserChatMessage
 }
 var file_proto_user_proto_depIdxs = []int32{
 	1, // 0: proto.UserService.CreateUser:input_type -> proto.CreateUserRequest
 	3, // 1: proto.UserService.ListUsers:input_type -> proto.ListUsersRequest
 	1, // 2: proto.UserService.CreateUsers:input_type -> proto.CreateUserRequest
-	2, // 3: proto.UserService.CreateUser:output_type -> proto.CreateUserResponse
-	0, // 4: proto.UserService.ListUsers:output_type -> proto.User
-	4, // 5: proto.UserService.CreateUsers:output_type -> proto.CreateUsersResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	5, // 3: proto.UserService.UserChat:input_type -> proto.UserChatMessage
+	2, // 4: proto.UserService.CreateUser:output_type -> proto.CreateUserResponse
+	0, // 5: proto.UserService.ListUsers:output_type -> proto.User
+	4, // 6: proto.UserService.CreateUsers:output_type -> proto.CreateUsersResponse
+	5, // 7: proto.UserService.UserChat:output_type -> proto.UserChatMessage
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -334,7 +393,7 @@ func file_proto_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_user_proto_rawDesc), len(file_proto_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

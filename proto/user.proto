@@ -24,8 +24,14 @@ message CreateUsersResponse {
   int32 created_user_count = 2;
 }
 
+message UserChatMessage {
+  string user_id = 1;
+  string message = 2;
+}
+
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc ListUsers(ListUsersRequest) returns (stream User);
   rpc CreateUsers(stream CreateUserRequest) returns (CreateUsersResponse);
+  rpc UserChat(stream UserChatMessage) returns (UserChatMessage);
 }
