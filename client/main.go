@@ -176,12 +176,12 @@ func main() {
 	// createUser(ctx, grpcClient)
 	//
 	// // server streaming rpc
-	listUsers(ctx, grpcClient)
+	// listUsers(ctx, grpcClient)
 	//
 	// // client streaming rpc
 	// createUsers(ctx, grpcClient)
 	//
 	// bidirectional streaming rpc
-	// userChat(ctx, grpcClient)
+	userChat(ctx, grpcClient)
 
 }

@@ -16,7 +16,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
 
@@ -230,6 +233,10 @@ func main() {
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds), grpc.UnaryInterceptor(authInterceptor), grpc.StreamInterceptor(authStreamInterceptor))
 	pb.RegisterUserServiceServer(grpcServer, &server{db: dbPool})
+	healthServer := health.NewServer()
+	healthpb.RegisterHealthServer(grpcServer, healthServer)
+	healthServer.SetServingStatus("UserService", healthpb.HealthCheckResponse_SERVING)
+	reflection.Register(grpcServer)
 	log.Println("gRPC server started on port :50051")
 
 	if err := grpcServer.Serve(lis); err != nil {
