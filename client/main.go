@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"time"
 
@@ -129,22 +131,41 @@ func userChat(ctx context.Context, grpcClient pb.UserServiceClient) {
 		}
 	}()
 
-	messagesToSend := []*pb.UserChatMessage{
-		{UserId: "client-1", Message: "Hello, server!"},
-		{UserId: "client-1", Message: "How are you?"},
-		{UserId: "client-1", Message: "gRPC is awesome."},
-	}
-
-	for _, msg := range messagesToSend {
-		log.Printf("Sending to Server: %s", msg.GetMessage())
-		if err := chatUser.Send(msg); err != nil {
-			log.Fatalf("Failed to send message: %v", err)
+	go func() {
+		userId := fmt.Sprintf("%f-user-%d", rand.Float64(), rand.Int())
+		for {
+			fmt.Print("Enter Message: ")
+			reader := bufio.NewReader(os.Stdin)
+			msg, _ := reader.ReadString('\n')
+			messagesToSend := &pb.UserChatMessage{
+				UserId:  userId,
+				Message: msg,
+			}
+			if err := chatUser.Send(messagesToSend); err != nil {
+				log.Fatalf("Failed to send messages to server. %v", err)
+			}
 		}
-		time.Sleep(1 * time.Second)
-	}
-	chatUser.CloseSend()
+	}()
+
 	<-waitc
-	log.Println("chat finish")
+	log.Println("chat done")
+
+	// messagesToSend := []*pb.UserChatMessage{
+	// 	{UserId: "client-1", Message: "Hello, server!"},
+	// 	{UserId: "client-1", Message: "How are you?"},
+	// 	{UserId: "client-1", Message: "gRPC is awesome."},
+	// }
+	//
+	// for _, msg := range messagesToSend {
+	// 	log.Printf("Sending to Server: %s", msg.GetMessage())
+	// 	if err := chatUser.Send(msg); err != nil {
+	// 		log.Fatalf("Failed to send message: %v", err)
+	// 	}
+	// 	time.Sleep(1 * time.Second)
+	// }
+	// chatUser.CloseSend()
+	// <-waitc
+	// log.Println("chat finish")
 
 }
 
@@ -169,7 +190,7 @@ func main() {
 
 	defer conn.Close()
 	grpcClient := pb.NewUserServiceClient(conn)
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// Unary rpc
